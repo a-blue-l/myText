@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=750, target-densitydpi=device-dpi, user-scalable=0">
+	<title>My Text</title>
+	<style>
+		*{
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+		html, body{
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			position: relative;
+		}
+		.form{width:80%;height:80px;position:absolute;bottom:20%;left:0;right:0;margin:auto;z-index: 999;}
+		.form input{
+			width: 60%;
+			height: 80px;
+			font-size: 40px;
+			line-height: 80px;
+			float: left;
+			padding: 0 0 0 4px;
+		}
+		button{
+			width: 38%;height: 100%;
+			float: right;
+			margin: 0;
+			font-size:30px;
+		}
+		#textcanvas{
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: -1;
+		}
+		#canvas-container{
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			z-index: 9;
+			background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
+		    background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
+		    background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
+		    background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
+		    background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
+		}
+	</style>
+</head>
+<body>
+	<canvas id="textcanvas" width="600" height="200" style="width:100%;"></canvas>
+	<div id="canvas-container"></div>
+	<div class="form">
+		<input id="mytext" type="text" placeholder="输入想要的文字" maxlength="6">
+		<button>提交</button>
+	</div>
+	<script src="hilo-standalone.js"></script>
+	<script>
+		(function(main){
+			main();
+		})(function(){
+			'use strict'
+
+			var stage,
+				ticker,
+				circles = [],
+				textPixels  = [],
+				_height = window.innerHeight,
+				colors = ['#B2949D', '#FFF578', '#FF5F8D', '#37A9CC', '#188EB2'],
+				offsetX = (window.innerWidth-600)/2,
+        		offsetY = (window.innerHeight-300)/2,
+				textcanvas = document.getElementById('textcanvas'),
+				ctx = textcanvas.getContext('2d');
+
+			init();
+			function init(){
+				stage = new Hilo.Stage({
+	    			renderType: 'canvas',
+	                container: document.getElementById('canvas-container'),
+	                width:750,
+	                height: _height
+	    		})
+	    		ticker = new Hilo.Ticker(60);
+	    		ticker.addTick(Hilo.Tween);
+	    		ticker.addTick(stage);
+	    		ticker.start(true);
+	    		stage.onUpdate = onUpdate.bind(this);
+	    		addDome();
+			}
+			function addDome(){
+				for(var i = 0; i < 1000; i ++){
+					var circle = new Hilo.Graphics({
+		                id: "station"+i,
+		                width:3,
+		                height:3,
+		                x: window.innerWidth*Math.random(),
+		                y: window.innerHeight*Math.random(),
+		                alpha: 1
+		            })
+		            circle.math = Math.random()-0.5;
+		            circle.beginFill(colors[Math.floor(i%colors.length)]).drawCircle(0, 0, 3).endFill();
+		            circles.push(circle);
+		            circle.addTo(stage);
+				}
+			}
+
+			var falg = true;
+			function update(type, arr){
+				if(falg){
+					for(var i = 0; i < circles.length; i++){
+						if(i<arr.length){
+							Hilo.Tween.to(circles[i], {
+								alpha: 1,
+				                x:arr[i].x+offsetX,
+				                y:arr[i].y+offsetY
+				            }, {
+				                duration: 500,
+				                delay: 0,
+				                loop: false
+				            })
+						} else {
+							Hilo.Tween.to(circles[i], {
+				                alpha: 0.3
+				            }, {
+				                duration: 500,
+				                delay: 0,
+				                loop: false
+				            })
+						}
+					}
+				} else {
+					for(var i = 0; i < circles.length; i++){
+						if(circles[i].alpha != 0.3){
+							Hilo.Tween.to(circles[i], {
+				                x:window.innerWidth*Math.random(),
+				                y:window.innerHeight*Math.random()
+				            }, {
+				                duration: 500,
+				                delay: 0,
+				                loop: false
+				            })
+						}
+					}
+					setTimeout(function(){
+						for(var i = 0; i < circles.length; i++){
+							if(i<arr.length){
+								Hilo.Tween.to(circles[i], {
+									alpha: 1,
+					                x:arr[i].x+offsetX,
+					                y:arr[i].y+offsetY
+					            }, {
+					                duration: 500,
+					                delay: 0,
+					                loop: false
+					            })
+							} else {
+								Hilo.Tween.to(circles[i], {
+					                alpha: 0.3
+					            }, {
+					                duration: 500,
+					                delay: 0,
+					                loop: false
+					            })
+							}
+						}
+					}, 500)
+				}
+			}
+			function onUpdate(){
+				if(falg){
+					for(var i = 0; i < circles.length; i++){
+						circles[i].x += circles[i].math/5;
+						circles[i].y += circles[i].math/5;
+					}
+				} else {
+					for(var i = 0; i < circles.length; i++){
+						if(circles[i].alpha <= 0.31){
+							circles[i].x += circles[i].math/5;
+							circles[i].y += circles[i].math/5;
+						}
+					}
+				}
+			}
+			function getText(text){
+				ctx.clearRect(0,0,600, 200);
+				var fontSize = 500/(text.length);
+    			if (fontSize > 160) fontSize = 160;
+				ctx.font = "900 "+fontSize+"px 'Source Sans Pro'";
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.fillText(text, 300, 100);
+				textPixels = [];
+				var data = ctx.getImageData(0,0,600,200).data;
+				var nums = 0;
+				for (var i = 0; i < data.length;  i += 1) {
+		            if (data[i] != 0) {
+		                var x = Math.floor((i / 4) % 600);
+		                var y = Math.floor(Math.floor(i/600)/4);
+		                if((x && x%8 == 0) && (y && y%8 == 0)) textPixels.push({x: x, y: y});
+		            }
+		        }
+
+		        update('start', textPixels);
+			}
+			document.getElementsByTagName('button')[0].onclick = function(){
+				if(document.getElementById('mytext').value.length != 0){
+					getText(document.getElementById('mytext').value);
+					falg = false;
+				}
+			}
+		})
+	</script>
+</body>
+</html>
